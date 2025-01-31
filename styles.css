@@ -40,6 +40,100 @@ nav a:hover {
     color: var(--pure-white);
 }
 
+/* Add Hamburger Menu Styles */
+.hamburger {
+    display: none; /* Hidden by default */
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 10px;
+    z-index: 1001;
+}
+
+.hamburger-box {
+    width: 30px;
+    height: 24px;
+    display: inline-block;
+    position: relative;
+}
+
+.hamburger-inner {
+    width: 100%;
+    height: 2px;
+    background-color: var(--gold);
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    transition: transform 0.3s ease;
+}
+
+.hamburger-inner::before,
+.hamburger-inner::after {
+    content: "";
+    width: 100%;
+    height: 2px;
+    background-color: var(--gold);
+    position: absolute;
+    left: 0;
+    transition: transform 0.3s ease;
+}
+
+.hamburger-inner::before {
+    top: -8px;
+}
+
+.hamburger-inner::after {
+    top: 8px;
+}
+
+@media (max-width: 768px) {
+    .hamburger {
+        display: block;
+    }
+    
+    .nav-menu {
+        position: fixed;
+        top: 70px;
+        right: -100%;
+        width: 100%;
+        max-width: 300px;
+        height: calc(100vh - 70px);
+        background: var(--primary-black);
+        flex-direction: column;
+        padding: 2rem;
+        transition: right 0.3s ease;
+        box-shadow: -4px 0 15px rgba(0,0,0,0.2);
+        z-index: 1000;
+    }
+    
+    .nav-menu.active {
+        right: 0;
+    }
+    
+    .nav-menu a {
+        margin: 0.5rem 0;
+        padding: 1rem;
+        border-radius: 6px;
+    }
+    
+    .nav-menu a:hover {
+        background: rgba(255,215,0,0.1);
+    }
+    
+    .hamburger.active .hamburger-inner {
+        background-color: transparent;
+    }
+    
+    .hamburger.active .hamburger-inner::before {
+        transform: translateY(8px) rotate(45deg);
+    }
+    
+    .hamburger.active .hamburger-inner::after {
+        transform: translateY(-8px) rotate(-45deg);
+    }
+}
+
 .container {
     max-width: 1200px;
     margin: 80px auto 20px;

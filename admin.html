@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <html>
 <head>
     <title>Admin Portal</title>
@@ -8,7 +9,12 @@
     <nav>
         <div class="nav-container">
             <a href="voting.html" class="nav-logo">SNU Recruit</a>
-            <div class="nav-links">
+            <button class="hamburger" aria-label="Menu">
+                <span class="hamburger-box">
+                    <span class="hamburger-inner"></span>
+                </span>
+            </button>
+            <div class="nav-links nav-menu">
                 <a href="admin.html">Admin</a>
                 <a href="gallery.html">Gallery</a>
                 <a href="voting.html">Voting</a>
@@ -173,6 +179,19 @@
             submitBtn.disabled = false;
             submitBtn.querySelector('span').textContent = 'Add PNM';
         }
+        const hamburger = document.querySelector('.hamburger');
+        const navMenu = document.querySelector('.nav-menu');
+        hamburger.addEventListener('click', () => {
+            hamburger.classList.toggle('active');
+            navMenu.classList.toggle('active');
+        });
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!hamburger.contains(e.target) && !navMenu.contains(e.target)) {
+                hamburger.classList.remove('active');
+                navMenu.classList.remove('active');
+            }
+        });
     </script>
 </body>
 </html>
