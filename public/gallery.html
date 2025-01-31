@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PNM Gallery</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <a href="voting.html" class="nav-logo">SNU Recruit</a>
+            <div class="nav-links">
+                <a href="admin.html">Admin</a>
+                <a href="gallery.html">Gallery</a>
+                <a href="voting.html">Voting</a>
+            </div>
+        </div>
+    </nav>
+    <br><br><br>
+    <div class="gallery" id="gallery"></div> 
+    <div class="sidebar" id="sidebar">
+        <button class="close-btn" onclick="closeSidebar()">×</button>
+        <h2 id="pnm-name"></h2>
+        <p>PNM#: <span id="pnm-number"></span></p>
+        <p>GPA: <span id="pnm-gpa"></span></p>
+        <h3>Comments</h3>
+        <div id="comments"></div>
+        <form id="commentForm">
+            <textarea placeholder="Add comment" required></textarea>
+            <button type="submit">Add Comment</button>
+        </form>
+    </div>
+
+
+    <script>
+        const gallery = document.getElementById('gallery');
+        const sidebar = document.getElementById('sidebar');
+        let selectedPnm = null;
+        function renderGallery() {
+            gallery.innerHTML = '';
+            const pnms = JSON.parse(localStorage.getItem('pnms')) || []; 
+            pnms.forEach(pnm => {
+                const card = document.createElement('div');
+                card.className = 'pnm-card';
+                card.innerHTML = `
+                    <img src="${pnm.photo}">
+                    <h3>${pnm.name}</h3>
+                `;
+                card.addEventListener('click', () => {
+                    // Remove existing selections
+                    document.querySelectorAll('.pnm-card').forEach(c => c.classList.remove('selected'));
+                    
+                    // Add selection to clicked card
+                    card.classList.add('selected');
+                    
+                    // Rest of your existing code
+                    selectedPnm = pnm;
+                    sidebar.classList.add('active');
+                    // ... existing code ...
+                    selectedPnm = pnm;
+                    sidebar.classList.add('active');
+                    document.getElementById('pnm-name').textContent = pnm.name;
+                    document.getElementById('pnm-number').textContent = pnm.number;
+                    document.getElementById('pnm-gpa').textContent = pnm.gpa;
+                    document.getElementById('comments').innerHTML = pnm.comments
+                        .map(c => `<div class="comment">${c}</div>`).join('');
+                });
+                gallery.appendChild(card);
+            });
+        }
+
+        function closeSidebar() {
+            sidebar.classList.remove('active');
+        }
+
+        document.getElementById('commentForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const comment = this.querySelector('textarea').value;
+            const pnms = JSON.parse(localStorage.getItem('pnms'));
+            const index = pnms.findIndex(p => p.id === selectedPnm.id);
+            pnms[index].comments.push(comment);
+            localStorage.setItem('pnms', JSON.stringify(pnms));
+            renderGallery();
+            this.reset();
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!sidebar.contains(e.target) && !e.target.closest('.pnm-card')) {
+                closeSidebar();
+            }
+        });
+
+        renderGallery();
+    </script>
+</body>
+</html>

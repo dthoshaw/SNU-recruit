@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Voting</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <a href="voting.html" class="nav-logo">SNU Recruit</a>
+            <div class="nav-links">
+                <a href="admin.html">Admin</a>
+                <a href="gallery.html">Gallery</a>
+                <a href="voting.html">Voting</a>
+            </div>
+        </div>
+    </nav>
+    <div class="voting-container">
+        <div class="form-card">
+            <h1 class="form-title">Recruitment Voting</h1>
+            <div class="progress">
+                <div class="progress-bar" id="progressBar"></div>
+                <span id="progressText">0/0</span>
+            </div>
+
+            <div class="pnm-display-card">
+                <div class="pnm-image-container">
+                    <img id="voting-photo" src="" alt="PNM Photo">
+                </div>
+                <div class="pnm-info-container">
+                    <h2 id="voting-name"></h2>
+                    <div clas="stats-comments-wrapper">
+                        <div class="pnm-stats">
+                            <div class="stat-item">
+                                <span class="stat-label">PNM #</span>
+                                <span class="stat-value" id="voting-number"></span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">GPA</span>
+                                <span class="stat-value" id="voting-gpa"></span>
+                            </div>
+                        </div>
+                        <div class="comments-box">
+                            <h3 class="comments-title">Comments</h3>
+                            <div class="comments-list" id="voting-comments"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="voting-controls">
+                <button onclick="navigate(-1)" id="backButton" class="nav-button">
+                    <svg viewBox="0 0 24 24" width="24" height="24">
+                        <path fill="currentColor" d="M15.41,16.58L10.83,12L15.41,7.41L14,6L8,12L14,18L15.41,16.58Z"/>
+                    </svg>
+                </button>
+                <div class="vote-buttons">
+                    <button onclick="vote('bid')" class="vote-button bid-button">
+                        <span>Bid</span>
+                        <svg viewBox="0 0 24 24" width="20" height="20">
+                            <path fill="currentColor" d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"/>
+                        </svg>
+                    </button>
+                    <button onclick="vote('no-bid')" class="vote-button no-bid-button">
+                        <span>No Bid</span>
+                        <svg viewBox="0 0 24 24" width="20" height="20">
+                            <path fill="currentColor" d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/>
+                        </svg>
+                    </button>
+                </div>
+                <button onclick="navigate(1)" id="nextButton" class="nav-button">
+                    <svg viewBox="0 0 24 24" width="24" height="24">
+                        <path fill="currentColor" d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z"/>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="results-section">
+                <h2 class="results-title">Voting Results</h2>
+                <div id="results"></div>
+            </div>
+        </div>
+    </div>
+    <script>
+        let currentIndex = 0;
+        let pnms = JSON.parse(localStorage.getItem('pnms')) || [];
+        function updateDisplay() {
+            document.getElementById('backButton').disabled = currentIndex === 0;
+            document.getElementById('nextButton').disabled = currentIndex >= pnms.length - 1;
+
+            const progressPercent = (currentIndex / pnms.length) * 100;
+            document.getElementById('progressBar').style.width = `${progressPercent}%`;
+            document.getElementById('progressText').textContent = 
+                `${currentIndex + 1}/${pnms.length}`;
+            if (currentIndex < pnms.length) {
+                const pnm = pnms[currentIndex];
+                document.getElementById('voting-photo').src = pnm.photo || '';
+                document.getElementById('voting-name').textContent = pnm.name;
+                document.getElementById('voting-number').textContent = pnm.number;
+                document.getElementById('voting-gpa').textContent = pnm.gpa;
+                const commentsHTML = pnm.comments.map(c => `
+                    <div class="comment-item">${c}</div>
+                `).join('');
+                document.getElementById('voting-comments').innerHTML = commentsHTML || 
+                    '<div class="comment-item">No comments yet</div>';
+            }
+        }
+
+        function vote(decision) {
+            pnms[currentIndex].bid = decision;
+            localStorage.setItem('pnms', JSON.stringify(pnms));
+            if (currentIndex < pnms.length - 1) {
+                currentIndex++;
+            }
+            updateDisplay();
+            showResults();
+        }
+
+        function navigate(direction) {
+            currentIndex = Math.max(0, Math.min(pnms.length - 1, currentIndex + direction));
+            updateDisplay();
+        }
+
+        function showResults() {
+            const results = document.getElementById('results');
+            results.innerHTML = pnms.map(pnm => `
+                <div class="result-item ${pnm.bid || 'unvoted'}">
+                    <div class="pnm-info">
+                        <span class="pnm-number">#${pnm.number}</span>
+                        <span class="pnm-name">${pnm.name}</span>
+                    </div>
+                    <div class="result-buttons">
+                        <button onclick="updateVote('${pnm.id}', 'bid')" 
+                            class="vote-button bid-button ${pnm.bid === 'bid' ? 'active' : ''}">Bid</button>
+                        <button onclick="updateVote('${pnm.id}', 'no-bid')" 
+                            class="vote-button no-bid-button ${pnm.bid === 'no-bid' ? 'active' : ''}">No Bid</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateVote(id, decision) {
+            const index = pnms.findIndex(p => p.id === id);
+            pnms[index].bid = decision;
+            localStorage.setItem('pnms', JSON.stringify(pnms));
+            showResults();
+            if (index === currentIndex) updateDisplay();
+        }
+
+        updateDisplay();
+        showResults();
+    </script>
+</body>
+</html>
