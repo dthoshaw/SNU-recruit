@@ -8,7 +8,12 @@
     <nav>
         <div class="nav-container">
             <a href="voting.html" class="nav-logo">SNU Recruit</a>
-            <div class="nav-links">
+            <button class="hamburger" aria-label="Menu">
+                <span class="hamburger-box">
+                    <span class="hamburger-inner"></span>
+                </span>
+            </button>
+            <div class="nav-links nav-menu">
                 <a href="index.html">Admin</a>
                 <a href="gallery.html">Gallery</a>
                 <a href="voting.html">Voting</a>
@@ -86,6 +91,19 @@
         document.addEventListener('click', (e) => {
             if (!sidebar.contains(e.target) && !e.target.closest('.pnm-card')) {
                 closeSidebar();
+            }
+        });
+        const hamburger = document.querySelector('.hamburger');
+        const navMenu = document.querySelector('.nav-menu');
+        hamburger.addEventListener('click', () => {
+            hamburger.classList.toggle('active');
+            navMenu.classList.toggle('active');
+        });
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!hamburger.contains(e.target) && !navMenu.contains(e.target)) {
+                hamburger.classList.remove('active');
+                navMenu.classList.remove('active');
             }
         });
 
