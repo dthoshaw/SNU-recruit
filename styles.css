@@ -1049,3 +1049,235 @@ nav a[aria-current="page"]::after {
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); /* Adjust minmax for tighter layout */
     gap: 1rem;
 }
+
+/* Fullscreen mode container */
+.fullscreen-container {
+    display: none; /* Hidden by default */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9); /* Black background for the photo area */
+    z-index: 2000;
+    flex-direction: row;
+}
+
+/* Sidebar styling */
+.sidebar {
+    width: 300px; /* Fixed width for the sidebar */
+    background: #f4f4f4; /* Light background for the sidebar */
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    z-index: 1001; /* Ensure sidebar is above the photo */
+}
+
+/* Photo container styling */
+.photo-container {
+    flex: 1; /* Take up remaining space */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.photo-container img {
+    max-width: 500%;
+    max-height: 500%;
+    object-fit: contain;
+    border: 3px solid var(--gold);
+    border-radius: 8px;
+}
+
+.vote-buttons-vertical {
+    width: 100%;
+    gap: 1rem;
+    margin-top: 1rem;
+    flex-direction: column;
+}
+
+/* Stat item adjustments */
+.fullscreen-sidebar .stat-item {
+    background: var(--section-gray);
+    border-radius: 8px;
+    padding: 0.6rem 1rem; /* Reduced vertical padding */
+    margin: 0 0 0.5rem 0;
+    min-height: auto;
+}
+
+.fullscreen-sidebar .stat-label {
+    font-size: 0.8rem !important;
+    margin-bottom: 0.2rem;
+}
+
+.fullscreen-sidebar .stat-value {
+    font-size: 1rem;
+}
+
+/* Fullscreen button styling */
+.fullscreen-btn {
+    padding: 10px;
+    background: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+/* Sidebar styling */
+.fullscreen-sidebar {
+    width: 350px;
+    background: var(--pure-white);
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    overflow-y: auto;
+    box-shadow: -4px 0 15px rgba(0,0,0,0.1);
+    height: 100vh; /* Full viewport height */
+    padding: 2rem 1.5rem;
+    overflow: hidden; /* Prevent any scrolling */
+    box-sizing: border-box;
+}
+
+/* Vertical stack layout */
+.fullscreen-sidebar .pnm-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    flex: 1;
+    padding-bottom: 1rem;
+}
+
+/* Comments section expansion */
+.fullscreen-sidebar .comments-box {
+    flex: 1;
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0.5rem !important;
+
+}
+
+#fs-name.pnm-name {
+    font-size: 1.4rem;
+    margin-bottom: 0.5rem;
+}
+
+.fullscreen-sidebar .comments-list {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+    margin-top: 1rem;
+    margin-bottom: 0rem !important;
+    padding-bottom: 0 !important;
+}
+
+/* Fullscreen close button */
+.fullscreen-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: var(--gold);
+    color: var(--primary-black);
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2001;
+}
+
+.vote-buttons-vertical .vote-button {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 1.2rem !important;
+    border: 2px solid transparent;
+}
+
+.navigation-buttons {
+    margin-top: auto;
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    width: 100%;
+    padding: 1rem 0;
+    position: sticky;
+    bottom: 0;
+    background: var(--pure-white);
+    z-index: 2;
+    box-shadow: 0 -4px 12px rgba(0,0,0,0.05);
+}
+
+.navigation-buttons .nav-button {
+    width: 48px !important;
+    height: 48px !important;
+    max-width: none !important;
+    flex: 0 0 auto; /* Prevent growing/shrinking */
+}
+
+.comments-box {
+    flex: 1;
+    min-height: 150px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Ensure comments section scrolls independently */
+.comments-list {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+/* Stat item compact sizing */
+.stat-item {
+    padding: 0.8rem;
+    margin: 0 0.5rem;
+}
+
+.stat-value {
+    font-size: 0.95rem;
+}
+
+.stat-label {
+    font-size: 0.85rem !important;
+}
+
+.fullscreen-sidebar .vote-buttons-vertical {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 1rem !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    margin-top: 0.5rem;
+}
+
+.fullscreen-sidebar .vote-button {
+    width: 120px !important;
+    height: 120px !important;
+    margin: 0 !important;
+    flex-shrink: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.fullscreen-sidebar .vote-button span {
+    font-size: 0.9rem;
+    margin-top: 0.4rem;
+}
+
+.fullscreen-sidebar .vote-button svg {
+    width: 24px;
+    height: 24px;
+}

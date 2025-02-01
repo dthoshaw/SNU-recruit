@@ -56,7 +56,7 @@
                 </button>
             </form>
             <div class="pnm-list">
-                <h2>Current PNMs (<span id="pnmCount">0</span>)</h2>
+                <h2>Current PNMs</h2>
                 <div class="stats">
                     <span>Total: <span id="totalPnms">0</span></span>
                     <span>Avg GPA: <span id="avgGpa">0.0</span></span>
@@ -219,7 +219,6 @@
             const container = document.getElementById('adminPnmList');
             const pnms = JSON.parse(localStorage.getItem('pnms')) || [];
             // Update the PNM count
-            document.getElementById('pnmCount').textContent = pnms.length;
             container.innerHTML = pnms.map(pnm => `
                 <div class="pnm-item" data-id="${pnm.id}">
                     <div class="pnm-actions">
