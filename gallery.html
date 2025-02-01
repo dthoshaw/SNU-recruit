@@ -1,9 +1,10 @@
 <!DOCTYPE html>
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <html>
 <head>
     <title>PNM Gallery</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
     <nav>
@@ -42,90 +43,7 @@
             <button type="submit">Add Comment</button>
         </form>
     </div>
-
-
-    <script>
-        const gallery = document.getElementById('gallery');
-        const sidebar = document.getElementById('sidebar');
-        let selectedPnm = null;
-        function renderGallery() {
-            gallery.innerHTML = '';
-            const pnms = JSON.parse(localStorage.getItem('pnms')) || [];
-            const filter = document.getElementById('bidFilter').value;
-            
-            const filteredPnms = pnms.filter(pnm => {
-                if (filter === 'bid') return pnm.bid === "bid";
-                if (filter === 'no-bid') return pnm.bid === "no-bid";
-                return true; // Show all if 'all' is selected
-            });
-
-            filteredPnms.forEach(pnm => {
-                const card = document.createElement('div');
-                card.className = 'pnm-card';
-                card.innerHTML = `
-                    <img src="${pnm.photo}">
-                    <h3>${pnm.name}</h3>
-                `;
-                card.addEventListener('click', () => {
-                    // Remove existing selections
-                    document.querySelectorAll('.pnm-card').forEach(c => c.classList.remove('selected'));
-                    
-                    // Add selection to clicked card
-                    card.classList.add('selected');
-                    
-                    // Rest of your existing code
-                    selectedPnm = pnm;
-                    sidebar.classList.add('active');
-                    // ... existing code ...
-                    selectedPnm = pnm;
-                    sidebar.classList.add('active');
-                    document.getElementById('pnm-name').textContent = pnm.name;
-                    document.getElementById('pnm-number').textContent = pnm.number;
-                    document.getElementById('pnm-gpa').textContent = pnm.gpa;
-                    document.getElementById('comments').innerHTML = pnm.comments
-                        .map(c => `<div class="comment">${c}</div>`).join('');
-                });
-                gallery.appendChild(card);
-            });
-        }
-
-        function closeSidebar() {
-            sidebar.classList.remove('active');
-        }
-
-        document.getElementById('commentForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const comment = this.querySelector('textarea').value;
-            const pnms = JSON.parse(localStorage.getItem('pnms'));
-            const index = pnms.findIndex(p => p.id === selectedPnm.id);
-            pnms[index].comments.push(comment);
-            localStorage.setItem('pnms', JSON.stringify(pnms));
-            renderGallery();
-            this.reset();
-        });
-
-        document.getElementById('bidFilter').addEventListener('change', renderGallery);
-
-        document.addEventListener('click', (e) => {
-            if (!sidebar.contains(e.target) && !e.target.closest('.pnm-card')) {
-                closeSidebar();
-            }
-        });
-        const hamburger = document.querySelector('.hamburger');
-        const navMenu = document.querySelector('.nav-menu');
-        hamburger.addEventListener('click', () => {
-            hamburger.classList.toggle('active');
-            navMenu.classList.toggle('active');
-        });
-        // Close menu when clicking outside
-        document.addEventListener('click', (e) => {
-            if (!hamburger.contains(e.target) && !navMenu.contains(e.target)) {
-                hamburger.classList.remove('active');
-                navMenu.classList.remove('active');
-            }
-        });
-
-        renderGallery();
-    </script>
+    <script src="js/common.js"></script>
+    <script src="js/gallery.js"></script>
 </body>
 </html>

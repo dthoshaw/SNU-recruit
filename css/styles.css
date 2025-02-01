@@ -847,9 +847,10 @@ nav {
 }
 
 .nav-logo::before {
-    content: "🐍";
+    content: "⚔";
     font-size: 1.4rem;
     color: var(--gold);
+    margin-right: 0.5rem;
 }
 
 .nav-links {
@@ -1124,6 +1125,13 @@ nav a[aria-current="page"]::after {
     border: none;
     border-radius: 5px;
     cursor: pointer;
+    display: inline-block;
+}
+
+@media (max-width: 768px) {
+    .fullscreen-btn {
+        display: none !important;
+    }
 }
 
 /* Sidebar styling */
