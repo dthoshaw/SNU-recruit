@@ -818,7 +818,7 @@ nav {
 }
 
 .nav-logo::before {
-    content: "★";
+    content: "🐍";
     font-size: 1.4rem;
     color: var(--gold);
 }
@@ -883,3 +883,55 @@ nav a[aria-current="page"]::after {
     background: #bb2d3b;
     transform: translateY(-1px);
 }
+
+.results-counter {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: var(--pure-white);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.counter {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.95rem;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+}
+
+.counter strong {
+    font-weight: 600;
+    margin-left: 0.3rem;
+}
+
+.counter.total {
+    background: rgba(255,215,0,0.1);
+    color: var(--dark-gray);
+}
+
+.counter.bids {
+    background: rgba(255,215,0,0.15);
+    color: var(--gold);
+}
+
+.counter.no-bids {
+    background: rgba(42,42,42,0.1);
+    color: var(--dark-gray);
+}
+
+.counter.undecided {
+    background: rgba(220,53,69,0.1);
+    color: #dc3545;
+}
+
+@media (max-width: 480px) {
+    .results-counter {
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+}
+

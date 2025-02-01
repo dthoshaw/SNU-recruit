@@ -79,9 +79,14 @@
                     </svg>
                 </button>
             </div>
-
             <div class="results-section">
                 <h2 class="results-title">Voting Results</h2>
+                <div class="results-counter">
+                    <span class="counter total">Total: <strong>0</strong></span>
+                    <span class="counter bids">Bids: <strong>0</strong></span>
+                    <span class="counter no-bids">No Bids: <strong>0</strong></span>
+                    <span class="counter undecided">Undecided: <strong>0</strong></span>
+                </div>
                 <div id="results"></div>
             </div>
         </div>
@@ -128,6 +133,15 @@
 
         function showResults() {
             const results = document.getElementById('results');
+            const total = pnms.length;
+            const bids = pnms.filter(p => p.bid === 'bid').length;
+            const noBids = pnms.filter(p => p.bid === 'no-bid').length;
+            const undecided = total - bids - noBids;
+            // Update counter display
+            document.querySelector('.counter.total strong').textContent = total;
+            document.querySelector('.counter.bids strong').textContent = bids;
+            document.querySelector('.counter.no-bids strong').textContent = noBids;
+            document.querySelector('.counter.undecided strong').textContent = undecided;
             results.innerHTML = pnms.map(pnm => `
                 <div class="result-item ${pnm.bid || 'unvoted'}">
                     <div class="pnm-info">
