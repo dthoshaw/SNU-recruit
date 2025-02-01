@@ -42,7 +42,7 @@
 
                 <div class="form-group">
                     <label class="file-upload">
-                        <input type="file" id="photo" accept="image/*" required>
+                        <input type="file" id="photo" accept="image/*">
                         <span class="upload-label">Upload Photo</span>
                         <span class="file-name" id="fileName">No file chosen</span>
                     </label>
@@ -55,11 +55,17 @@
                     </svg>
                 </button>
             </form>
+            <div class="pnm-list">
+                <h2>Current PNMs (<span id="pnmCount">0</span>)</h2>
+                <div class="stats">
+                    <span>Total: <span id="totalPnms">0</span></span>
+                    <span>Avg GPA: <span id="avgGpa">0.0</span></span>
+                </div>
+                <div class="pnm-grid" id="adminPnmList"></div>
+            </div>
         </div>
         <button onclick="clearStorage()" class="clear-btn">Clear All</button>
     </div>
-
-
 
     <script>
         let isProcessing = false;
@@ -74,7 +80,7 @@
                     const MAX_HEIGHT = 800;
                     let width = img.width;
                     let height = img.height;
-                    // Calculate new dimensions while maintaining aspect ratio
+                    
                     if (width > height) {
                         if (width > MAX_WIDTH) {
                             height *= MAX_WIDTH / width;
@@ -86,11 +92,12 @@
                             height = MAX_HEIGHT;
                         }
                     }
+                    
                     canvas.width = width;
                     canvas.height = height;
                     const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);       
-                    // Convert to JPEG with 70% quality
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
                     canvas.toBlob(blob => {
                         const reader = new FileReader();
                         reader.onloadend = () => callback(reader.result);
@@ -101,65 +108,91 @@
             };
             reader.readAsDataURL(file);
         }
+    
         // Form submission handler
         document.getElementById('pnmForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            const submitBtn = this.querySelector('button[type="submit"]');     
-            // Prevent multiple submissions
-            if (isProcessing) return; 
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const editId = this.dataset.editId;
+
+            if (isProcessing) return;
+
             // Validate form inputs
             const name = document.getElementById('name').value.trim();
             const number = document.getElementById('number').value;
             const gpa = document.getElementById('gpa').value;
             const file = document.getElementById('photo').files[0];
-            if (!name || !number || !gpa || !file) {
-                alert('All fields are required!');
+
+            // Check for required fields
+            if (!name || !number || !gpa) {
+                alert('Name, PNM Number, and GPA are required!');
                 return;
             }
-            if (isNaN(gpa) || parseFloat(gpa) > 4.0 || parseFloat(gpa) < 0) {
-                alert('Please enter a valid GPA between 0-4.0');
+
+            // Validate GPA
+            if (isNaN(gpa) || parseFloat(gpa) > 5.0 || parseFloat(gpa) < 0) {
+                alert('Please enter a valid GPA between 0-5.0');
                 return;
             }
-            // Lock form during processing
+
+            // Only require an image if adding a new PNM
+            if (!editId && !file) {
+                alert('Please upload a photo for the new PNM.');
+                return;
+            }
+
             isProcessing = true;
             submitBtn.disabled = true;
-            submitBtn.querySelector('span').textContent = 'Adding...';
-            // Capture form data before async operation
-            const formData = {
-                name: name,
-                number: number,
-                gpa: gpa,
-                file: file
-            };
-            // Process image and save data
-            compressImage(formData.file, (compressedPhoto) => {
-                // Final validation check
-                if (!formData.name || !formData.number || !formData.gpa) {
-                    alert('Form data was modified during processing!');
-                    resetFormState(submitBtn);
-                    return;
-                }
-                // Create PNM object
-                const pnm = {
-                    id: Date.now(),
-                    name: formData.name,
-                    number: formData.number,
-                    gpa: formData.gpa,
-                    photo: compressedPhoto,
-                    comments: [],
-                    bid: null
-                };
-                // Save to localStorage
+            submitBtn.querySelector('span').textContent = editId ? 'Updating...' : 'Adding...';
+
+            const processPNM = (compressedPhoto) => {
                 const pnms = JSON.parse(localStorage.getItem('pnms')) || [];
-                pnms.push(pnm);
+                
+                if (editId) {
+                    // Update existing PNM
+                    const index = pnms.findIndex(p => p.id == editId);
+                    if (index === -1) return;
+                    
+                    pnms[index] = {
+                        ...pnms[index],
+                        name: name,
+                        number: number,
+                        gpa: gpa,
+                        photo: compressedPhoto || this.dataset.existingPhoto // Use existing photo if no new one is provided
+                    };
+                } else {
+                    // Create new PNM
+                    pnms.push({
+                        id: Date.now(),
+                        name: name,
+                        number: number,
+                        gpa: gpa,
+                        photo: compressedPhoto,
+                        comments: [],
+                        bidStatus: null
+                    });
+                }
+
                 localStorage.setItem('pnms', JSON.stringify(pnms));
-                // Reset form state
                 this.reset();
                 document.getElementById('fileName').textContent = 'No file chosen';
                 resetFormState(submitBtn);
-                alert('PNM added successfully!');
-            });
+                delete this.dataset.editId;
+                delete this.dataset.existingPhoto; // Clear the stored photo URL
+                submitBtn.querySelector('span').textContent = 'Add PNM';
+                renderAdminList();
+                alert(editId ? 'PNM updated successfully!' : 'PNM added successfully!');
+            };
+
+            if (file) {
+                // Compress and process the new image
+                compressImage(file, processPNM);
+            } else if (editId) {
+                // No new image provided, use the existing one
+                processPNM(null);
+            }
         });
+    
         // Clear storage function
         function clearStorage() {
             if (confirm('Are you sure you want to delete ALL data? This cannot be undone!')) {
@@ -168,23 +201,86 @@
                 location.reload();
             }
         }
+    
         // File input handler
         document.getElementById('photo').addEventListener('change', function(e) {
             document.getElementById('fileName').textContent = 
                 this.files[0]?.name || 'No file chosen';
         });
+    
         // Helper function to reset form state
         function resetFormState(submitBtn) {
             isProcessing = false;
             submitBtn.disabled = false;
-            submitBtn.querySelector('span').textContent = 'Add PNM';
         }
+    
+        // PNM List Management Functions
+        function renderAdminList() {
+            const container = document.getElementById('adminPnmList');
+            const pnms = JSON.parse(localStorage.getItem('pnms')) || [];
+            // Update the PNM count
+            document.getElementById('pnmCount').textContent = pnms.length;
+            container.innerHTML = pnms.map(pnm => `
+                <div class="pnm-item" data-id="${pnm.id}">
+                    <div class="pnm-actions">
+                        <button class="edit-btn" onclick="openEditForm('${pnm.id}')">✏️</button>
+                        <button class="delete-btn" onclick="deletePnm('${pnm.id}')">🗑️</button>
+                    </div>
+                    <img src="${pnm.photo}" class="admin-thumb" alt="${pnm.name}">
+                    <h4>${pnm.name}</h4>
+                    <p>#${pnm.number} | GPA: ${pnm.gpa}</p>
+                    <p>Bid Status: ${pnm.bidStatus !== null ? 
+                        (pnm.bidStatus ? '✅' : '❌') : 'Pending'}</p>
+                </div>
+            `).join('');
+            // Update stats
+            document.getElementById('totalPnms').textContent = pnms.length;
+            document.getElementById('avgGpa').textContent = pnms.length > 0 
+                ? (pnms.reduce((sum, p) => sum + parseFloat(p.gpa), 0) / pnms.length).toFixed(2)
+                : '0.00';
+        }
+    
+        function deletePnm(id) {
+            if (!confirm('Delete this PNM permanently?')) return;
+            const pnms = JSON.parse(localStorage.getItem('pnms')) || [];
+            const filtered = pnms.filter(p => p.id != id);
+            localStorage.setItem('pnms', JSON.stringify(filtered));
+            renderAdminList();
+            alert('PNM deleted successfully!');
+        }
+    
+        function openEditForm(id) {
+            const pnms = JSON.parse(localStorage.getItem('pnms')) || [];
+            const pnm = pnms.find(p => p.id == id);
+            
+            if (!pnm) return;
+            
+            // Populate form fields
+            document.getElementById('name').value = pnm.name;
+            document.getElementById('number').value = pnm.number;
+            document.getElementById('gpa').value = pnm.gpa;
+            
+            // Clear the file input
+            document.getElementById('photo').value = '';
+            document.getElementById('fileName').textContent = 'Using existing photo';
+            
+            // Store the existing image URL
+            const form = document.getElementById('pnmForm');
+            form.dataset.editId = id;
+            form.dataset.existingPhoto = pnm.photo; // Store the existing photo URL
+            
+            form.querySelector('button[type="submit"] span').textContent = 'Update PNM';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+            
+        // Navigation toggle
         const hamburger = document.querySelector('.hamburger');
         const navMenu = document.querySelector('.nav-menu');
         hamburger.addEventListener('click', () => {
             hamburger.classList.toggle('active');
             navMenu.classList.toggle('active');
         });
+    
         // Close menu when clicking outside
         document.addEventListener('click', (e) => {
             if (!hamburger.contains(e.target) && !navMenu.contains(e.target)) {
@@ -192,6 +288,10 @@
                 navMenu.classList.remove('active');
             }
         });
+    
+        // Initial render
+        document.addEventListener('DOMContentLoaded', renderAdminList);
     </script>
+
 </body>
 </html>

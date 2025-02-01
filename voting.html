@@ -115,14 +115,23 @@
                 document.getElementById('voting-comments').innerHTML = commentsHTML || 
                     '<div class="comment-item">No comments yet</div>';
             }
+            const currentPnm = pnms[currentIndex] || {};
+            const bidButton = document.querySelector('.bid-button');
+            const noBidButton = document.querySelector('.no-bid-button');
+            
+            bidButton.classList.remove('active');
+            noBidButton.classList.remove('active');
+            
+            if (currentPnm.bid === 'bid') {
+                bidButton.classList.add('active');
+            } else if (currentPnm.bid === 'no-bid') {
+                noBidButton.classList.add('active');
+            }
         }
 
         function vote(decision) {
             pnms[currentIndex].bid = decision;
             localStorage.setItem('pnms', JSON.stringify(pnms));
-            if (currentIndex < pnms.length - 1) {
-                currentIndex++;
-            }
             updateDisplay();
             showResults();
         }

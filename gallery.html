@@ -22,6 +22,13 @@
         </div>
     </nav>
     <br><br><br>
+    <div class="filters">
+        <select id="bidFilter">
+            <option value="all">All PNMs</option>
+            <option value="bid">Bid</option>
+            <option value="no-bid">No Bid</option>
+        </select>
+    </div>
     <div class="gallery" id="gallery"></div> 
     <div class="sidebar" id="sidebar">
         <button class="close-btn" onclick="closeSidebar()">×</button>
@@ -43,8 +50,16 @@
         let selectedPnm = null;
         function renderGallery() {
             gallery.innerHTML = '';
-            const pnms = JSON.parse(localStorage.getItem('pnms')) || []; 
-            pnms.forEach(pnm => {
+            const pnms = JSON.parse(localStorage.getItem('pnms')) || [];
+            const filter = document.getElementById('bidFilter').value;
+            
+            const filteredPnms = pnms.filter(pnm => {
+                if (filter === 'bid') return pnm.bid === "bid";
+                if (filter === 'no-bid') return pnm.bid === "no-bid";
+                return true; // Show all if 'all' is selected
+            });
+
+            filteredPnms.forEach(pnm => {
                 const card = document.createElement('div');
                 card.className = 'pnm-card';
                 card.innerHTML = `
@@ -88,6 +103,8 @@
             renderGallery();
             this.reset();
         });
+
+        document.getElementById('bidFilter').addEventListener('change', renderGallery);
 
         document.addEventListener('click', (e) => {
             if (!sidebar.contains(e.target) && !e.target.closest('.pnm-card')) {
