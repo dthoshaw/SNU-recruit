@@ -10,10 +10,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function uploadPhotoAndGetUrl(fileOrBlob, originalName) {
         if (!fileOrBlob) return null;
-        const fileName = `${Date.now()}_${originalName || 'photo'}`.replace(/\s+/g, '_');
-        const { error: upErr } = await supabase.storage.from('photos').upload(fileName, fileOrBlob);
-        if (upErr) { console.error(upErr); alert('Photo upload failed'); return null; }
-        const { data } = supabase.storage.from('photos').getPublicUrl(fileName);
+        const safeName = (originalName || 'photo').replace(/\s+/g, '_');
+        const path = `pnms/${Date.now()}_${Math.random().toString(36).slice(2)}_${safeName}`;
+        const options = {
+            contentType: (fileOrBlob.type || 'image/jpeg'),
+            cacheControl: '3600',
+            upsert: true
+        };
+        const { error: upErr } = await supabase.storage.from('photos').upload(path, fileOrBlob, options);
+        if (upErr) {
+            console.error('Supabase upload error:', upErr);
+            alert(`Photo upload failed: ${upErr.message || upErr}`);
+            return null;
+        }
+        const { data } = supabase.storage.from('photos').getPublicUrl(path);
         return data?.publicUrl || null;
     }
 
@@ -115,7 +125,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 await new Promise((resolve, reject) => {
                     compressImage(file, async (blob) => {
                         try {
-                            photoUrl = await uploadPhotoAndGetUrl(blob || file, file.name);
+                            // Ensure we pass a Blob with proper type
+                            const uploadBlob = new Blob([blob], { type: 'image/jpeg' });
+                            photoUrl = await uploadPhotoAndGetUrl(uploadBlob, file.name);
                             resolve();
                         } catch (err) { reject(err); }
                     });
