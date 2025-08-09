@@ -6,6 +6,23 @@ document.addEventListener('DOMContentLoaded', () => {
     let selectedPnm = null;
     let selectedCard = null;
 
+    async function fetchPnms() {
+        const { data, error } = await supabase.from('pnms').select('*');
+        if (error) { console.error(error); return []; }
+        return data || [];
+    }
+
+    async function fetchComments(pnmId) {
+        const { data, error } = await supabase.from('comments').select('*').eq('pnm_id', pnmId).order('created_at', { ascending: true });
+        if (error) { console.error(error); return []; }
+        return data || [];
+    }
+
+    async function addComment(pnmId, body) {
+        const { error } = await supabase.from('comments').insert([{ pnm_id: pnmId, body }]);
+        if (error) { console.error(error); alert('Failed to add comment'); }
+    }
+
     function openModal() {
         modal?.classList.remove('hidden');
         modal?.classList.add('active');
@@ -18,33 +35,25 @@ document.addEventListener('DOMContentLoaded', () => {
         modal?.classList.remove('active');
         modalOverlay?.classList.add('hidden');
         document.body.style.overflow = '';
-        // Remove selected highlight when closing
         selectedCard?.classList.remove('selected');
         selectedCard = null;
     }
 
-    function renderGallery() {
+    async function renderGallery() {
         gallery.innerHTML = '';
-        const pnms = JSON.parse(localStorage.getItem('pnms')) || [];
+        const pnms = await fetchPnms();
         const filter = document.getElementById('bidFilter')?.value || 'all';
         const sortBy = document.getElementById('sortBy')?.value || 'number-asc';
 
         let working = pnms.filter(pnm => {
-            if (filter === 'bid') return pnm.bid === "bid";
-            if (filter === 'no-bid') return pnm.bid === "no-bid";
+            if (filter === 'bid') return pnm.bid === 'bid';
+            if (filter === 'no-bid') return pnm.bid === 'no-bid';
             return true;
         });
 
-        // Sorts
-        const toNumber = (val) => {
-            const n = Number(val);
-            return Number.isFinite(n) ? n : 0;
-        };
+        const toNumber = (val) => { const n = Number(val); return Number.isFinite(n) ? n : 0; };
         const byFirst = (name = '') => (name || '').trim().split(/\s+/)[0]?.toLowerCase() || '';
-        const byLast = (name = '') => {
-            const parts = (name || '').trim().split(/\s+/);
-            return (parts[parts.length - 1] || '').toLowerCase();
-        };
+        const byLast = (name = '') => { const parts = (name || '').trim().split(/\s+/); return (parts[parts.length - 1] || '').toLowerCase(); };
 
         if (sortBy === 'number-asc') {
             working.sort((a, b) => toNumber(a.number) - toNumber(b.number));
@@ -58,24 +67,20 @@ document.addEventListener('DOMContentLoaded', () => {
             const card = document.createElement('div');
             card.className = 'pnm-card';
             card.innerHTML = `
-                <span class="pnm-number-badge">#${pnm.number}</span>
-                <img src="${pnm.photo}" alt="${pnm.name}">
+                <span class=\"pnm-number-badge\">#${pnm.number}</span>
+                <img src=\"${pnm.photo}\" alt=\"${pnm.name}\">
                 <h3>${pnm.name}</h3>
             `;
 
-            // Hover highlight only
             card.addEventListener('mouseenter', () => card.classList.add('selected'));
-            card.addEventListener('mouseleave', () => {
-                if (card !== selectedCard) card.classList.remove('selected');
-            });
+            card.addEventListener('mouseleave', () => { if (card !== selectedCard) card.classList.remove('selected'); });
 
-            card.addEventListener('click', () => {
-                // Highlight while modal open
+            card.addEventListener('click', async () => {
                 if (selectedCard && selectedCard !== card) selectedCard.classList.remove('selected');
                 selectedCard = card;
                 card.classList.add('selected');
                 selectedPnm = pnm;
-                populateModal(pnm);
+                await populateModal(pnm);
                 openModal();
             });
 
@@ -83,46 +88,30 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function populateModal(pnm) {
+    async function populateModal(pnm) {
         document.getElementById('pnm-name').textContent = pnm.name;
         document.getElementById('pnm-number').textContent = pnm.number;
         document.getElementById('pnm-gpa').textContent = pnm.gpa;
-        document.getElementById('comments').innerHTML = (pnm.comments || [])
-            .map(c => `<div class="comment">${c}</div>`).join('');
+        const comments = await fetchComments(pnm.id);
+        document.getElementById('comments').innerHTML = comments.map(c => `<div class=\"comment\">${c.body}</div>`).join('');
     }
 
-    // Expose for close button compatibility
-    window.closeSidebar = function() {
-        closeModal();
-    };
+    window.closeSidebar = function() { closeModal(); };
 
-    // Comment form submission
-    document.getElementById('commentForm')?.addEventListener('submit', function(e) {
+    document.getElementById('commentForm')?.addEventListener('submit', async function(e) {
         e.preventDefault();
         const comment = this.querySelector('textarea').value;
-        const pnms = JSON.parse(localStorage.getItem('pnms')) || [];
-        const index = pnms.findIndex(p => p.id === selectedPnm?.id);
-
-        if (index !== -1) {
-            if (!Array.isArray(pnms[index].comments)) pnms[index].comments = [];
-            pnms[index].comments.push(comment);
-            localStorage.setItem('pnms', JSON.stringify(pnms));
-            populateModal(pnms[index]);
-            renderGallery();
-            this.reset();
-        }
+        if (!selectedPnm?.id) return;
+        await addComment(selectedPnm.id, comment);
+        await populateModal(selectedPnm);
+        this.reset();
     });
 
-    // Filter and sort change
     document.getElementById('bidFilter')?.addEventListener('change', renderGallery);
     document.getElementById('sortBy')?.addEventListener('change', renderGallery);
 
-    // Close modal when clicking overlay or pressing Escape
     modalOverlay?.addEventListener('click', closeModal);
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') closeModal();
-    });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
 
-    // Initial render
     renderGallery();
 });

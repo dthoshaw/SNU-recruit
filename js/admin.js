@@ -1,6 +1,42 @@
 document.addEventListener('DOMContentLoaded', () => {
     let isProcessing = false;
 
+    // --- Supabase helpers ---
+    async function fetchPnms() {
+        const { data, error } = await supabase.from('pnms').select('*').order('number', { ascending: true });
+        if (error) { console.error(error); alert('Error loading PNMs'); return []; }
+        return data || [];
+    }
+
+    async function uploadPhotoAndGetUrl(fileOrBlob, originalName) {
+        if (!fileOrBlob) return null;
+        const fileName = `${Date.now()}_${originalName || 'photo'}`.replace(/\s+/g, '_');
+        const { error: upErr } = await supabase.storage.from('photos').upload(fileName, fileOrBlob);
+        if (upErr) { console.error(upErr); alert('Photo upload failed'); return null; }
+        const { data } = supabase.storage.from('photos').getPublicUrl(fileName);
+        return data?.publicUrl || null;
+    }
+
+    async function insertPnm({ name, number, gpa, photoUrl }) {
+        const { data, error } = await supabase.from('pnms').insert([{ name, number: Number(number), gpa: Number(gpa), photo: photoUrl }]).select('*').single();
+        if (error) { console.error(error); alert('Failed to add PNM'); return null; }
+        return data;
+    }
+
+    async function updatePnm(id, { name, number, gpa, photoUrl }) {
+        const payload = { name, number: Number(number), gpa: Number(gpa) };
+        if (photoUrl) payload.photo = photoUrl;
+        const { error } = await supabase.from('pnms').update(payload).eq('id', id);
+        if (error) { console.error(error); alert('Failed to update PNM'); return false; }
+        return true;
+    }
+
+    async function deletePnmRemote(id) {
+        const { error } = await supabase.from('pnms').delete().eq('id', id);
+        if (error) { console.error(error); alert('Failed to delete PNM'); return false; }
+        return true;
+    }
+
     // Image compression function
     function compressImage(file, callback) {
         const reader = new FileReader();
@@ -31,9 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 ctx.drawImage(img, 0, 0, width, height);
                 
                 canvas.toBlob(blob => {
-                    const reader = new FileReader();
-                    reader.onloadend = () => callback(reader.result);
-                    reader.readAsDataURL(blob);
+                    callback(blob);
                 }, 'image/jpeg', 0.7);
             };
             img.src = e.target.result;
@@ -42,7 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Form submission handler
-    document.getElementById('pnmForm')?.addEventListener('submit', function(e) {
+    document.getElementById('pnmForm')?.addEventListener('submit', async function(e) {
         e.preventDefault();
         const submitBtn = this.querySelector('button[type="submit"]');
         const editId = this.dataset.editId;
@@ -55,7 +89,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const gpa = document.getElementById('gpa').value;
         const file = document.getElementById('photo').files[0];
 
-        // Validation checks
         if (!name || !number || !gpa) {
             alert('Name, PNM Number, and GPA are required!');
             return;
@@ -75,54 +108,47 @@ document.addEventListener('DOMContentLoaded', () => {
         submitBtn.disabled = true;
         submitBtn.querySelector('span').textContent = editId ? 'Updating...' : 'Adding...';
 
-        const processPNM = (compressedPhoto) => {
-            const pnms = JSON.parse(localStorage.getItem('pnms')) || [];
-            
-            if (editId) {
-                const index = pnms.findIndex(p => p.id == editId);
-                if (index === -1) return;
-                
-                pnms[index] = {
-                    ...pnms[index],
-                    name: name,
-                    number: number,
-                    gpa: gpa,
-                    photo: compressedPhoto || this.dataset.existingPhoto
-                };
-            } else {
-                pnms.push({
-                    id: Date.now(),
-                    name: name,
-                    number: number,
-                    gpa: gpa,
-                    photo: compressedPhoto,
-                    comments: [],
-                    bidStatus: null
+        let photoUrl = null;
+        try {
+            if (file) {
+                // Compress and upload
+                await new Promise((resolve, reject) => {
+                    compressImage(file, async (blob) => {
+                        try {
+                            photoUrl = await uploadPhotoAndGetUrl(blob || file, file.name);
+                            resolve();
+                        } catch (err) { reject(err); }
+                    });
                 });
             }
 
-            localStorage.setItem('pnms', JSON.stringify(pnms));
+            if (editId) {
+                await updatePnm(editId, { name, number, gpa, photoUrl });
+                alert('PNM updated successfully!');
+            } else {
+                await insertPnm({ name, number, gpa, photoUrl });
+                alert('PNM added successfully!');
+            }
+
             this.reset();
             document.getElementById('fileName').textContent = 'No file chosen';
-            resetFormState(submitBtn);
             delete this.dataset.editId;
             delete this.dataset.existingPhoto;
             submitBtn.querySelector('span').textContent = 'Add PNM';
-            renderAdminList();
-            alert(editId ? 'PNM updated successfully!' : 'PNM added successfully!');
-        };
-
-        if (file) {
-            compressImage(file, processPNM);
-        } else if (editId) {
-            processPNM(null);
+            await renderAdminList();
+        } catch (err) {
+            console.error(err);
+            alert('An unexpected error occurred');
+        } finally {
+            isProcessing = false;
+            submitBtn.disabled = false;
         }
     });
 
     // PNM List Management
-    function renderAdminList() {
+    async function renderAdminList() {
         const container = document.getElementById('adminPnmList');
-        const pnms = JSON.parse(localStorage.getItem('pnms')) || [];
+        const pnms = await fetchPnms();
         
         container.innerHTML = pnms.map(pnm => `
             <div class="pnm-item" data-id="${pnm.id}">
@@ -133,30 +159,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 <img src="${pnm.photo}" class="admin-thumb" alt="${pnm.name}">
                 <h4>${pnm.name}</h4>
                 <p>#${pnm.number} | GPA: ${pnm.gpa}</p>
-                <p>Status: ${pnm.bidStatus !== null ? 
-                    (pnm.bidStatus ? 'Bid' : 'No-Bid') : 'Pending'}</p>
+                <p>Status: ${pnm.bid === 'bid' ? 'Bid' : (pnm.bid === 'no-bid' ? 'No-Bid' : 'Pending')}</p>
             </div>
         `).join('');
 
         document.getElementById('totalPnms').textContent = pnms.length;
         document.getElementById('avgGpa').textContent = pnms.length > 0 
-            ? (pnms.reduce((sum, p) => sum + parseFloat(p.gpa), 0) / pnms.length).toFixed(2)
+            ? (pnms.reduce((sum, p) => sum + Number(p.gpa || 0), 0) / pnms.length).toFixed(2)
             : '0.00';
     }
 
-    window.deletePnm = function(id) {
+    window.deletePnm = async function(id) {
         if (!confirm('Delete this PNM permanently?')) return;
-        const pnms = JSON.parse(localStorage.getItem('pnms')) || [];
-        const filtered = pnms.filter(p => p.id != id);
-        localStorage.setItem('pnms', JSON.stringify(filtered));
-        renderAdminList();
-        alert('PNM deleted successfully!');
+        const ok = await deletePnmRemote(id);
+        if (ok) {
+            await renderAdminList();
+            alert('PNM deleted successfully!');
+        }
     };
 
-    window.openEditForm = function(id) {
-        const pnms = JSON.parse(localStorage.getItem('pnms')) || [];
-        const pnm = pnms.find(p => p.id == id);
-        
+    window.openEditForm = async function(id) {
+        const pnms = await fetchPnms();
+        const pnm = pnms.find(p => p.id === id);
         if (!pnm) return;
         
         document.getElementById('name').value = pnm.name;
@@ -177,20 +201,14 @@ document.addEventListener('DOMContentLoaded', () => {
             this.files[0]?.name || 'No file chosen';
     });
 
-    // Clear storage
-    document.querySelector('.clear-btn')?.addEventListener('click', function() {
-        if (confirm('Are you sure you want to delete ALL data? This cannot be undone!')) {
-            localStorage.clear();
-            alert('All data has been cleared!');
-            location.reload();
-        }
+    // Clear all data (dangerous)
+    document.querySelector('.clear-btn')?.addEventListener('click', async function() {
+        if (!confirm('Are you sure you want to delete ALL PNMs? This cannot be undone!')) return;
+        const { error } = await supabase.from('pnms').delete().neq('id', null);
+        if (error) { console.error(error); alert('Failed to clear PNMs'); return; }
+        alert('All PNMs deleted');
+        await renderAdminList();
     });
-
-    // Helper function
-    function resetFormState(submitBtn) {
-        isProcessing = false;
-        submitBtn.disabled = false;
-    }
 
     // Initial render
     renderAdminList();

@@ -109,6 +109,13 @@
         </div>
     </div>
     <script src="js/common.js"></script>
+    <!-- Supabase client -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script>
+      const SUPABASE_URL = 'https://fibxqstrgzicterhxglv.supabase.co';
+      const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZpYnhxc3RyZ3ppY3Rlcmh4Z2x2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ3Njk3MzYsImV4cCI6MjA3MDM0NTczNn0.B0OUYlt-V03APC8C2-N3Hf_K-OL8ukCKNPCfUCiI2yM';
+      window.supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    </script>
     <script src="js/voting.js"></script>
 </body>
 </html>

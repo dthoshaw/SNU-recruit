@@ -1,11 +1,18 @@
 // voting.js
 document.addEventListener('DOMContentLoaded', () => {
     let currentIndex = -1; // -1 denotes intro screen (0th starting place)
-    let pnms = JSON.parse(localStorage.getItem('pnms')) || [];
+    let pnms = [];
 
     const introScreen = document.getElementById('introScreen');
     const votingScreen = document.getElementById('votingScreen');
     const controls = document.getElementById('controls');
+
+    async function loadPnms() {
+        const { data, error } = await supabase.from('pnms').select('*').order('number', { ascending: true });
+        if (error) { console.error(error); alert('Failed to load PNMs'); pnms = []; } else { pnms = data || []; }
+        updateDisplay();
+        showResults();
+    }
 
     function setVisibility() {
         if (currentIndex === -1) {
@@ -20,29 +27,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     window.startVoting = function() {
-        // Jump to first PNM
-        if (pnms.length > 0) {
-            currentIndex = 0;
-            updateDisplay();
-        }
+        if (pnms.length > 0) { currentIndex = 0; updateDisplay(); }
     };
 
-    function updateDisplay() {
-        // Update visibility first
+    async function updateDisplay() {
         setVisibility();
 
         const atIntro = currentIndex === -1;
         document.getElementById('backButton').disabled = atIntro || currentIndex === 0;
         document.getElementById('nextButton').disabled = atIntro || currentIndex >= pnms.length - 1;
 
-        // Progress: show 0/total at intro; otherwise (index+1)/total
-        const progressPercent = pnms.length
-            ? (atIntro ? 0 : (((currentIndex + 1) / pnms.length) * 100))
-            : 0;
+        const progressPercent = pnms.length ? (atIntro ? 0 : (((currentIndex + 1) / pnms.length) * 100)) : 0;
         document.getElementById('progressBar').style.width = `${progressPercent}%`;
-        document.getElementById('progressText').textContent = atIntro
-            ? `0/${pnms.length}`
-            : `${pnms.length ? currentIndex + 1 : 0}/${pnms.length}`;
+        document.getElementById('progressText').textContent = atIntro ? `0/${pnms.length}` : `${pnms.length ? currentIndex + 1 : 0}/${pnms.length}`;
 
         if (!atIntro && currentIndex < pnms.length) {
             const pnm = pnms[currentIndex];
@@ -50,12 +47,11 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('voting-name').textContent = pnm.name || '';
             document.getElementById('voting-number').textContent = pnm.number || '';
             document.getElementById('voting-gpa').textContent = pnm.gpa || '';
-            document.getElementById('voting-comments').innerHTML = (pnm.comments || [])
-                .map(c => `<div class="comment-item">${c}</div>`).join('');
+            document.getElementById('voting-comments').innerHTML = '';
         }
 
-        const bidButton = document.querySelector('.bid-button');
-        const noBidButton = document.querySelector('.no-bid-button');
+        const bidButton = controls?.querySelector('.bid-button');
+        const noBidButton = controls?.querySelector('.no-bid-button');
         bidButton?.classList.remove('active');
         noBidButton?.classList.remove('active');
 
@@ -67,48 +63,35 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    window.vote = function(decision) {
-        if (currentIndex === -1) return; // ignore on intro
+    window.vote = async function(decision) {
+        if (currentIndex === -1) return;
         const currentPnm = pnms[currentIndex];
         if (!currentPnm) return;
 
-        if (currentPnm.bid === decision) {
-            currentPnm.bid = null;
-            currentPnm.bidStatus = null;
-        } else {
-            currentPnm.bid = decision;
-            currentPnm.bidStatus = decision === 'bid';
-        }
+        const nextValue = currentPnm.bid === decision ? null : decision;
+        const { error } = await supabase.from('pnms').update({ bid: nextValue }).eq('id', currentPnm.id);
+        if (error) { console.error(error); alert('Failed to update vote'); return; }
 
-        localStorage.setItem('pnms', JSON.stringify(pnms));
+        pnms[currentIndex].bid = nextValue;
         updateDisplay();
         showResults();
     };
 
     window.navigate = function(direction) {
-        if (currentIndex === -1 && direction > 0) {
-            // from intro -> first PNM
-            currentIndex = 0;
-        } else {
-            currentIndex = Math.max(0, Math.min(pnms.length - 1, currentIndex + direction));
-        }
+        if (currentIndex === -1 && direction > 0) { currentIndex = 0; }
+        else { currentIndex = Math.max(0, Math.min(pnms.length - 1, currentIndex + direction)); }
         updateDisplay();
     };
 
-    window.updateVote = function(id, decision) {
+    window.updateVote = async function(id, decision) {
         const index = pnms.findIndex(p => p.id === id);
         const pnm = pnms[index];
         if (!pnm) return;
 
-        if (pnm.bid === decision) {
-            pnm.bid = null;
-            pnm.bidStatus = null;
-        } else {
-            pnm.bid = decision;
-            pnm.bidStatus = decision === 'bid';
-        }
-
-        localStorage.setItem('pnms', JSON.stringify(pnms));
+        const nextValue = pnm.bid === decision ? null : decision;
+        const { error } = await supabase.from('pnms').update({ bid: nextValue }).eq('id', id);
+        if (error) { console.error(error); alert('Failed to update vote'); return; }
+        pnms[index].bid = nextValue;
         showResults();
         if (index === currentIndex) updateDisplay();
     };
@@ -140,7 +123,6 @@ document.addEventListener('DOMContentLoaded', () => {
         `).join('');
     }
 
-    // Initial setup
-    updateDisplay();
-    showResults();
+    // Initial load
+    loadPnms();
 });

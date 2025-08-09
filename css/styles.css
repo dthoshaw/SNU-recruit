@@ -1226,3 +1226,7 @@ nav a[aria-current="page"]::after {
 /* Filters label spacing */
 .filters label { margin: 0 6px 0 12px; font-weight: 600; }
 .filters label:first-child { margin-left: 0; }
+
+/* Ensure active vote button icons adopt the text color */
+.vote-button.active { color: var(--primary-black) !important; }
+.vote-button.active svg path { fill: currentColor !important; }
