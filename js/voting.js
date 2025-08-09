@@ -2,6 +2,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     let currentIndex = -1; // -1 denotes intro screen (0th starting place)
     let pnms = [];
+    let comments = [];
 
     const introScreen = document.getElementById('introScreen');
     const votingScreen = document.getElementById('votingScreen');
@@ -10,9 +11,19 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadPnms() {
         const { data, error } = await supabase.from('pnms').select('*').order('number', { ascending: true });
         if (error) { console.error(error); alert('Failed to load PNMs'); pnms = []; } else { pnms = data || []; }
+        const { data2, error2 } = await supabase.from('comments').select('*').order('number', { ascending: true });
+        if (error2) { console.error(error2); alert('Failed to load comments'); comments = []; } else { comments = data2 || []; }
+
         updateDisplay();
         showResults();
     }
+
+    /*async function loadComments() {
+        const { data, error } = await supabase.from('comments').select('*').order('number', { ascending: true });
+        if (error) { console.error(error); alert('Failed to load comments'); comments = []; } else { comments = data || []; }
+        updateDisplay();
+        showResults();
+    }*/
 
     function setVisibility() {
         if (currentIndex === -1) {
@@ -29,6 +40,21 @@ document.addEventListener('DOMContentLoaded', () => {
     window.startVoting = function() {
         if (pnms.length > 0) { currentIndex = 0; updateDisplay(); }
     };
+
+    async function fetchCommentsForPnm(pnmId) {
+        const { data, error } = await supabase
+            .from('comments')
+            .select('body')
+            .eq('pnm_id', pnmId)
+            .order('created_at', { ascending: true });
+
+        if (error) {
+            console.error('Error fetching comments:', error);
+            return [];
+        }
+        return data; // Array of { body: "..." }
+    }
+
 
     async function updateDisplay() {
         setVisibility();
@@ -47,7 +73,17 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('voting-name').textContent = pnm.name || '';
             document.getElementById('voting-number').textContent = pnm.number || '';
             document.getElementById('voting-gpa').textContent = pnm.gpa || '';
-            document.getElementById('voting-comments').innerHTML = '';
+
+            const commentsContainer = document.getElementById('voting-comments');
+            commentsContainer.innerHTML = '';
+
+            // Fetch and append comments
+            const comments = await fetchCommentsForPnm(pnm.id);
+            comments.forEach(c => {
+                const div = document.createElement('div');
+                div.textContent = c.body;
+                commentsContainer.appendChild(div);
+            });
         }
 
         const bidButton = controls?.querySelector('.bid-button');
