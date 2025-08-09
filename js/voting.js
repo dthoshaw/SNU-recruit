@@ -1,51 +1,56 @@
 // voting.js
 document.addEventListener('DOMContentLoaded', () => {
-    let currentIndex = 0;
+    let currentIndex = -1; // -1 denotes intro screen (0th starting place)
     let pnms = JSON.parse(localStorage.getItem('pnms')) || [];
 
-    // Toggle fullscreen mode
-    window.toggleFullscreen = function() {
-        const fullscreenContainer = document.getElementById('fullscreenMode');
-        if (fullscreenContainer.style.display === 'flex') {
-            fullscreenContainer.style.display = 'none';
-            document.body.style.overflow = 'auto';
+    const introScreen = document.getElementById('introScreen');
+    const votingScreen = document.getElementById('votingScreen');
+    const controls = document.getElementById('controls');
+
+    function setVisibility() {
+        if (currentIndex === -1) {
+            introScreen?.classList.remove('hidden');
+            votingScreen?.classList.add('hidden');
+            controls?.classList.add('hidden');
         } else {
-            fullscreenContainer.style.display = 'flex';
-            document.body.style.overflow = 'hidden';
-            updateFullscreenDisplay();
+            introScreen?.classList.add('hidden');
+            votingScreen?.classList.remove('hidden');
+            controls?.classList.remove('hidden');
+        }
+    }
+
+    window.startVoting = function() {
+        // Jump to first PNM
+        if (pnms.length > 0) {
+            currentIndex = 0;
+            updateDisplay();
         }
     };
 
-    function updateFullscreenDisplay() {
-        const pnm = pnms[currentIndex] || {};
-        document.getElementById('fs-photo').src = pnm.photo || '';
-        document.getElementById('fs-name').textContent = pnm.name || '';
-        document.getElementById('fs-number').textContent = pnm.number || '';
-        document.getElementById('fs-gpa').textContent = pnm.gpa || '';
-        
-        const commentsHTML = (pnm.comments || [])
-            .map(c => `<div class="comment-item">${c}</div>`)
-            .join('') || '<div class="comment-item">No comments yet</div>';
-        
-        document.getElementById('fs-comments').innerHTML = commentsHTML;
-    }
-
     function updateDisplay() {
-        document.getElementById('backButton').disabled = currentIndex === 0;
-        document.getElementById('nextButton').disabled = currentIndex >= pnms.length - 1;
+        // Update visibility first
+        setVisibility();
 
-        const progressPercent = (currentIndex / pnms.length) * 100;
+        const atIntro = currentIndex === -1;
+        document.getElementById('backButton').disabled = atIntro || currentIndex === 0;
+        document.getElementById('nextButton').disabled = atIntro || currentIndex >= pnms.length - 1;
+
+        // Progress: show 0/total at intro; otherwise (index+1)/total
+        const progressPercent = pnms.length
+            ? (atIntro ? 0 : (((currentIndex + 1) / pnms.length) * 100))
+            : 0;
         document.getElementById('progressBar').style.width = `${progressPercent}%`;
-        document.getElementById('progressText').textContent = 
-            `${currentIndex + 1}/${pnms.length}`;
+        document.getElementById('progressText').textContent = atIntro
+            ? `0/${pnms.length}`
+            : `${pnms.length ? currentIndex + 1 : 0}/${pnms.length}`;
 
-        if (currentIndex < pnms.length) {
+        if (!atIntro && currentIndex < pnms.length) {
             const pnm = pnms[currentIndex];
             document.getElementById('voting-photo').src = pnm.photo || '';
-            document.getElementById('voting-name').textContent = pnm.name;
-            document.getElementById('voting-number').textContent = pnm.number;
-            document.getElementById('voting-gpa').textContent = pnm.gpa;
-            document.getElementById('voting-comments').innerHTML = pnm.comments
+            document.getElementById('voting-name').textContent = pnm.name || '';
+            document.getElementById('voting-number').textContent = pnm.number || '';
+            document.getElementById('voting-gpa').textContent = pnm.gpa || '';
+            document.getElementById('voting-comments').innerHTML = (pnm.comments || [])
                 .map(c => `<div class="comment-item">${c}</div>`).join('');
         }
 
@@ -55,18 +60,15 @@ document.addEventListener('DOMContentLoaded', () => {
         noBidButton?.classList.remove('active');
 
         const currentPnm = pnms[currentIndex] || {};
-        if (currentPnm.bid === 'bid') {
+        if (!atIntro && currentPnm.bid === 'bid') {
             bidButton?.classList.add('active');
-        } else if (currentPnm.bid === 'no-bid') {
+        } else if (!atIntro && currentPnm.bid === 'no-bid') {
             noBidButton?.classList.add('active');
-        }
-
-        if (document.getElementById('fullscreenMode').style.display === 'flex') {
-            updateFullscreenDisplay();
         }
     }
 
     window.vote = function(decision) {
+        if (currentIndex === -1) return; // ignore on intro
         const currentPnm = pnms[currentIndex];
         if (!currentPnm) return;
 
@@ -84,7 +86,12 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     window.navigate = function(direction) {
-        currentIndex = Math.max(0, Math.min(pnms.length - 1, currentIndex + direction));
+        if (currentIndex === -1 && direction > 0) {
+            // from intro -> first PNM
+            currentIndex = 0;
+        } else {
+            currentIndex = Math.max(0, Math.min(pnms.length - 1, currentIndex + direction));
+        }
         updateDisplay();
     };
 

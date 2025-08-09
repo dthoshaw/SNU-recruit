@@ -24,14 +24,24 @@
     </nav>
     <br><br><br>
     <div class="filters">
+        <label for="bidFilter">Filter by:</label>
         <select id="bidFilter">
             <option value="all">All PNMs</option>
             <option value="bid">Bid</option>
             <option value="no-bid">No Bid</option>
         </select>
+        <label for="sortBy">Sort by:</label>
+        <select id="sortBy">
+            <option value="number-asc">PNM #</option>
+            <option value="first-asc">First Name A–Z</option>
+            <option value="last-asc">Last Name A–Z</option>
+        </select>
     </div>
     <div class="gallery" id="gallery"></div> 
-    <div class="sidebar" id="sidebar">
+
+    <!-- Centered Modal for PNM Details -->
+    <div id="modalOverlay" class="modal-overlay hidden"></div>
+    <div id="pnmModal" class="modal hidden">
         <button class="close-btn" onclick="closeSidebar()">×</button>
         <h2 id="pnm-name"></h2>
         <p>PNM#: <span id="pnm-number"></span></p>
@@ -43,6 +53,7 @@
             <button type="submit">Add Comment</button>
         </form>
     </div>
+
     <script src="js/common.js"></script>
     <script src="js/gallery.js"></script>
 </body>

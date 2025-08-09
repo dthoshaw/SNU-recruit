@@ -30,7 +30,22 @@
                 <span id="progressText">0/0</span>
             </div>
 
-            <div class="pnm-display-card">
+            <!-- Intro (0th) screen -->
+            <div id="introScreen" class="intro-screen">
+                <h2 class="rules-title">Rules</h2>
+                <ul class="rules-list">
+                    <li>PNM must receive 100% approval for bid</li>
+                    <li>Raise hand to make a comment</li>
+                    <li>Be respectful and brief; We don't want to be here all night</li>
+                    <li>Do not speak out of turn; one person at a time</li>
+                    <li>No side conversations</li>
+                    <li>Try not to repeat what someone else already said; new perspectives are appreciated</li>
+                    <li>If you talked to the PNM, SPEAK UP!!!!</li>
+                </ul>
+                <button id="startVotingBtn" class="vote-button bid-button" onclick="startVoting()">Start Voting</button>
+            </div>
+
+            <div class="pnm-display-card" id="votingScreen">
                 <div class="pnm-image-container">
                     <img id="voting-photo" src="" alt="PNM Photo">
                 </div>
@@ -55,7 +70,7 @@
                 </div>
             </div>
 
-            <div class="voting-controls">
+            <div class="voting-controls" id="controls">
                 <button onclick="navigate(-1)" id="backButton" class="nav-button">
                     <svg viewBox="0 0 24 24" width="24" height="24">
                         <path fill="currentColor" d="M15.41,16.58L10.83,12L15.41,7.41L14,6L8,12L14,18L15.41,16.58Z"/>
@@ -90,64 +105,6 @@
                     <span class="counter undecided">Undecided: <strong>0</strong></span>
                 </div>
                 <div id="results"></div>
-            </div>
-            <button onclick="toggleFullscreen()" class="fullscreen-btn">Toggle Fullscreen Mode</button>
-
-        </div>
-    </div>
-    <div id="fullscreenMode" class="fullscreen-container">
-        <button onclick="toggleFullscreen()" class="fullscreen-close">&times;</button>
-        <div class="photo-container">
-            <img id="fs-photo" src="" alt="PNM Photo">
-        </div>
-        <div class="fullscreen-sidebar">
-            <!-- PNM Info Section -->
-            <div class="pnm-info">
-                <h2 id="fs-name" class="pnm-name"></h2>
-                <div class="stat-item">
-                    <span class="stat-label">PNM #</span>
-                    <span class="stat-value" id="fs-number"></span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">GPA</span>
-                    <span class="stat-value" id="fs-gpa"></span>
-                </div>
-                
-                <!-- Comments Section -->
-                <div class="comments-box">
-                    <h3 class="comments-title">Comments</h3>
-                    <div class="comments-list" id="fs-comments"></div>
-                </div>
-            </div>
-    
-            <!-- Voting Buttons -->
-            <div class="vote-buttons-vertical">
-                <button onclick="vote('bid')" class="vote-button bid-button">
-                    <span>Bid</span>
-                    <svg viewBox="0 0 24 24" width="20" height="20">
-                        <path fill="currentColor" d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"/>
-                    </svg>
-                </button>
-                <button onclick="vote('no-bid')" class="vote-button no-bid-button">
-                    <span>No Bid</span>
-                    <svg viewBox="0 0 24 24" width="20" height="20">
-                        <path fill="currentColor" d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/>
-                    </svg>
-                </button>
-            </div>
-    
-            <!-- Navigation Controls -->
-            <div class="navigation-buttons">
-                <button onclick="navigate(-1)" class="nav-button">
-                    <svg viewBox="0 0 24 24" width="24" height="24">
-                        <path fill="currentColor" d="M15.41,16.58L10.83,12L15.41,7.41L14,6L8,12L14,18L15.41,16.58Z"/>
-                    </svg>
-                </button>
-                <button onclick="navigate(1)" class="nav-button">
-                    <svg viewBox="0 0 24 24" width="24" height="24">
-                        <path fill="currentColor" d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z"/>
-                    </svg>
-                </button>
             </div>
         </div>
     </div>
