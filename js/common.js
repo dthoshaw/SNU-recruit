@@ -1,3 +1,31 @@
+(async function () {
+  function hasAuthCookie() {
+    return document.cookie.split(';').some(c => c.trim().startsWith('siteAuth='));
+  }
+  if (hasAuthCookie()) return;
+
+  const input = prompt("Enter password:");
+  if (!input) {
+    document.body.innerHTML = "<h1>Access denied</h1>";
+    throw new Error("Access denied");
+  }
+
+  const r = await fetch('/api/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password: input })
+  });
+
+  if (r.ok) {
+    // cookie set by server; reload to let cookie take effect
+    location.reload();
+  } else {
+    document.body.innerHTML = "<h1>Access denied</h1>";
+    throw new Error("Access denied");
+  }
+})();
+
+
 // Hamburger menu functionality
 document.addEventListener('DOMContentLoaded', () => {
     const hamburger = document.querySelector('.hamburger');
