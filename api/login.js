@@ -11,11 +11,11 @@ export default function handler(req, res) {
     try {
       const { password } = JSON.parse(body);
       if (password === process.env.SITE_PASSWORD) {
-        const oneDay = 60 * 60 * 24;
-        const base = `Path=/; SameSite=Lax; Max-Age=${oneDay}; Secure`;
-        // HttpOnly cookie (for server-side protection if needed)
+        // Session cookies (no Max-Age), expire when the browser session ends
+        const base = `Path=/; SameSite=Lax; Secure`;
+        // HttpOnly cookie (server-side)
         const serverCookie = `siteAuth=1; HttpOnly; ${base}`;
-        // Readable cookie so the front-end can detect auth status
+        // Readable cookie (client-side check)
         const clientCookie = `siteAuthClient=1; ${base}`;
         res.setHeader('Set-Cookie', [serverCookie, clientCookie]);
         res.status(200).json({ ok: true });
