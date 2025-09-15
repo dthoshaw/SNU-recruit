@@ -1,6 +1,6 @@
 (async function () {
   function hasAuthCookie() {
-    return document.cookie.split(';').some(c => c.trim().startsWith('siteAuth='));
+    return document.cookie.split(';').some(c => c.trim().startsWith('siteAuthClient='));
   }
   if (hasAuthCookie()) return;
 
