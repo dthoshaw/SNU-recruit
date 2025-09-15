@@ -1,8 +1,12 @@
 (async function () {
-  function hasAuthCookie() {
-    return document.cookie.split(';').some(c => c.trim().startsWith('siteAuthClient='));
+  // Per-tab auth flag
+  const TAB_AUTH_KEY = 'siteAuthTab';
+
+  function hasTabAuth() {
+    try { return sessionStorage.getItem(TAB_AUTH_KEY) === '1'; } catch { return false; }
   }
-  if (hasAuthCookie()) return;
+
+  if (hasTabAuth()) return;
 
   const input = prompt("Enter password:");
   if (!input) {
@@ -17,7 +21,8 @@
   });
 
   if (r.ok) {
-    // cookie set by server; reload to let cookie take effect
+    // Set per-tab flag so this tab remains authorized until it closes
+    try { sessionStorage.setItem(TAB_AUTH_KEY, '1'); } catch {}
     location.reload();
   } else {
     document.body.innerHTML = "<h1>Access denied</h1>";

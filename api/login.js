@@ -11,13 +11,11 @@ export default function handler(req, res) {
     try {
       const { password } = JSON.parse(body);
       if (password === process.env.SITE_PASSWORD) {
-        // Session cookies (no Max-Age), expire when the browser session ends
+        // Session cookie (no Max-Age), expires when browser session ends
+        // Note: client-side will manage per-tab auth via sessionStorage
         const base = `Path=/; SameSite=Lax; Secure`;
-        // HttpOnly cookie (server-side)
         const serverCookie = `siteAuth=1; HttpOnly; ${base}`;
-        // Readable cookie (client-side check)
-        const clientCookie = `siteAuthClient=1; ${base}`;
-        res.setHeader('Set-Cookie', [serverCookie, clientCookie]);
+        res.setHeader('Set-Cookie', serverCookie);
         res.status(200).json({ ok: true });
       } else {
         res.status(401).json({ ok: false });
