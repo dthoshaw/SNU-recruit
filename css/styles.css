@@ -347,6 +347,7 @@ button:hover {
 }
 
 
+
 .result-buttons .active {
     position: relative;
     padding-right: 40px;
@@ -1230,3 +1231,79 @@ nav a[aria-current="page"]::after {
 /* Ensure active vote button icons adopt the text color */
 .vote-button.active { color: var(--primary-black) !important; }
 .vote-button.active svg path { fill: currentColor !important; }
+
+/* Mobile-only refinements */
+@media (max-width: 480px) {
+  html, body { max-width: 100%; overflow-x: hidden; }
+
+  body { padding-left: 0; }
+  nav { padding: 0.75rem 1rem; margin-left: 0 !important; }
+
+  .container, .voting-container, .admin-container, .gallery, .filters, .results-section, .pnm-display-card, .modal {
+    width: 100%;
+    box-sizing: border-box;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* Admin: eliminate left bias and center content */
+  .admin-container { display: block !important; padding-left: 12px; padding-right: 12px; margin: 80px auto 24px !important; }
+  .admin-container .form-card { margin: 0 auto !important; max-width: 600px; width: 100%; }
+  .admin-container .pnm-list { margin: 0 auto !important; width: 100%; }
+  .admin-container .clear-btn { margin-left: auto !important; margin-right: auto !important; display: block; }
+
+  /* Reset any stray left margins on key blocks */
+  .form-card, .pnm-list, .pnm-grid { margin-left: 0 !important; }
+
+  /* Center and show filters clearly on mobile */
+  .filters { padding: 12px; display: flex; flex-direction: column; align-items: stretch; gap: 8px; }
+  .filters label { margin: 0; font-size: 0.95rem; }
+  .filters select { font-size: 14px; padding: 8px; width: 100%; max-width: 100%; }
+
+  .form-card { padding: 1rem !important; border-radius: 12px; }
+  .form-title { font-size: 1.3rem; margin-bottom: 1rem; }
+
+  .pnm-grid { grid-template-columns: 1fr; gap: 0.75rem; }
+
+  .gallery { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 0.75rem; padding: 1rem 12px; }
+  .pnm-card img { height: 220px; max-width: 100%; display: block; }
+  .pnm-card h3 { font-size: 0.95rem; margin: 0.6rem 0 0.9rem; }
+  .pnm-number-badge { font-size: 0.65rem; padding: 3px 6px; top: 8px; left: 8px; }
+
+  /* Modal */
+  .modal { width: 100vw; max-width: 100vw; left: 50%; transform: translate(-50%, -50%); max-height: 85vh; padding: 1rem; }
+  .close-btn { top: 8px; right: 8px; font-size: 20px; }
+
+  /* Voting */
+  .pnm-display-card { grid-template-columns: 1fr !important; gap: 1rem; padding: 1rem; }
+  .pnm-image-container { height: clamp(300px, 50vh, 440px) !important; }
+  .pnm-image-container img { border-width: 3px; max-width: 100%; display: block; }
+
+  .pnm-info-container h2 { font-size: 1.1rem; }
+  .stat-item { padding: 0.5rem; }
+  .stat-label { font-size: 0.75rem !important; }
+  .stat-value { font-size: 0.95rem; }
+
+  .vote-buttons { gap: 0.5rem; }
+  .vote-button { padding: 0.7rem 1rem; font-size: 0.95rem; min-width: 104px; }
+  .nav-button { width: 40px; height: 40px; }
+
+  .progress { height: 16px; margin: 1rem 0; }
+  #progressText { font-size: 0.8rem; }
+
+  .results-title { font-size: 1.1rem; }
+  .results-counter { gap: 0.5rem; flex-wrap: wrap; }
+  .results-counter .counter { font-size: 0.9rem; }
+  .result-item { padding: 0.9rem; }
+  .result-buttons .vote-button { padding: 0.4rem 0.7rem; font-size: 0.85rem; }
+
+  /* Admin */
+  .admin-container .form-card { max-width: 100%; }
+  .submit-btn { padding: 0.9rem 1rem; font-size: 1rem; }
+
+  /* Comments */
+  .comments-box { padding: 1rem; }
+  .comments-title { font-size: 1rem; }
+  .comments-list { padding-right: 0.5rem; }
+  .comment, .comment-item { font-size: 0.95rem; }
+}
